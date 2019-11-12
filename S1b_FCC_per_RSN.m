@@ -1,15 +1,13 @@
 
 clear, clc
 
-NC = 285;  load([ '../../../../Atlases/Gordon_atlas_hcp/Gordon333.mat']); nVect = length(FC_prior_vector); NC_0 = 12;
-save_path = ['Export/2019_08_01/Gordon_333/FCC_per_RSN/'];  if exist(save_path,'file')~=7, mkdir(save_path); end
+NC = 285;  load([ 'Atlases/Gordon/Gordon333.mat']); nVect = length(FC_prior_vector); NC_0 = 12;
+save_path = ['Export/2019_11_11/Gordon_333/FCC_per_RSN/'];  if exist(save_path,'file')~=7, mkdir(save_path); end
 
 task_list = {'Rest1_LR','Rest1_RL','Rest2_LR','Rest2_RL'};
 load('Export/subject_list_390_in_10.mat')
 
-save_path_filename = [save_path,'FCC_GS_WM_200.mat']; 
- 
-flag_phys = 0;
+save_path_filename = [save_path,'FCC_GS_WM_200.mat'];  
 
 %%   Optimize pipeline  !!
 
@@ -63,13 +61,6 @@ fprintf('Time elapsed (minutes): %3.1f  \n', toc/60),
 save(save_path_filename,'FCC_all','FCC_RSN')
 fprintf('The End \n'),
 load chirp,  sound(y,Fs)
-
-
-
-
-
-
-
 
 
 
