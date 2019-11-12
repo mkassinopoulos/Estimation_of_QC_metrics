@@ -1,0 +1,16 @@
+
+A/A  Network    range
+0    None    1-48
+1   Default 49-88
+2   ParietoOccip    89-96
+3   FrontoParietal  97-120
+4   Salience   121-124
+5   CinguloOperc   125-164
+6   MedialParietal   165-169
+7   DorsalAttn   170-201
+8   VentralAttn   202-224
+9   Visual     225-263
+10   SMhand   264-301
+11   SMmouth   302-309
+12   Auditory    310-333
+
