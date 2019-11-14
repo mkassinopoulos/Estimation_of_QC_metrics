@@ -8,8 +8,7 @@ save_path = ['Export/2019_11_11/Gordon_333/S1_PCA_order/'];  if exist(save_path,
 task_list = {'Rest1_LR','Rest1_RL','Rest2_LR','Rest2_RL'};
 load('Export/subject_list_390_in_10.mat')
 
-save_path_filename = [save_path,'PCA_GS_WM_order.mat'];             path_FC_all = [save_path,'FC_GS_WM_order.mat'];
-
+save_path_filename = [save_path,'PCA_GS_WM_order.mat'];
 
 %%   Optimize pipeline  !!
 
@@ -27,7 +26,7 @@ parfor c = 1 : nScans
     subject = char(subject_list(s,:));         task = char(task_list(run));
     fprintf('Subject: %s     (%d/%d);   Run: %d/%d    \n',subject,s,nSubj,run,4)
     
-    [data, GS, WMpca, CSFpca, FD,movRegr, ~, ~, ~,~,PCAexpl] = load_scan(subject,task,0);
+    [data, GS, ~, WMpca, ~, CSFpca, FD,movRegr] = load_scan(subject,task,0);
     nComp = size(WMpca,2);           NV = length(GS);             FDmean(c) = mean(FD);
     
     for p = 1:nPipel
@@ -59,26 +58,10 @@ parfor c = 1 : nScans
         DVARS = rms(img_diff_col,2); DVARS(1) = DVARS(2);
         FDDVARS(c,p) = corr(FD,DVARS);
     end
+    
 end
 fprintf('Time elapsed (minutes): %3.1f  \n', toc/60),
-% load chirp,  sound(y,Fs)
-
-nPipel = size(FC_opt_all_vector,3);
-FCC = zeros(nScans,nPipel);
-indCoupl = find(FC_prior_vector==1);
-parfor pip = 1:nPipel
-    fprintf('Pipelines: %d/%d     \n',pip, nPipel)
-    for c = 1 : nScans
-        FC_vector = squeeze(FC_opt_all_vector(:,c,pip));
-        poolNS = FC_vector; poolNS(indCoupl)=[];
-        poolS = FC_vector(indCoupl);
-        [ttest_p,ttest_h,a] = ranksum(poolS,poolNS,'Tail','right');
-        FCC(c,pip) = a.zval;
-    end
-end
-disp('End of loop !!! ')
-
-save(path_FC_all,'FC_opt_all_vector','FDDVARS','FCC','-v7.3')
+load chirp,  sound(y,Fs)
 
 %%  Estimate and Save QC metrics      ------------
 

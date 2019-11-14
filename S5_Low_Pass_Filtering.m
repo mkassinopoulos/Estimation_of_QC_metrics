@@ -19,8 +19,6 @@ FC_opt_all_vector = zeros(nVect,nScans,nPipel);
 FDmean = zeros(nScans,1);
 FDDVARS = zeros(nScans,nPipel);
 nPipel = size(FC_opt_all_vector,3);
-FCC = zeros(nScans,nPipel);
-indCoupl = find(FC_prior_vector==1);
 
 TR = 0.72;
 
@@ -30,12 +28,14 @@ parfor c = 1 :  4*nSubj
     subject = char(subject_list(s,:));         task = char(task_list(run));
     fprintf('Subject: %s     (%d/%d);   Run: %d/%d    \n',subject,s,nSubj,run,4)
     
-    [data, GS, WMpca, ~, FD,movRegr] = load_scan(subject,task,0);
+    [data, GS,~, WMpca,~,~, FD,movRegr] = load_scan(subject,task,0);
     nComp = size(WMpca,2);              NV = length(GS);             FDmean(c) = mean(FD);
     
     regr = [ones(NV,1), GS, WMpca(:,1:200)];
     FC_opt_all_vector_tmp = zeros(nVect,nPipel);
     FDDVARS_tmp = zeros(nPipel,1);
+    
+    % ----------------------------------------------------
     % LPF before Regression
     
     for model_c = 1:nPipel/2
@@ -62,7 +62,6 @@ parfor c = 1 :  4*nSubj
                 FC_vector(k) =FC_tmp(i,j);
             end
         end
-        %         FC_opt_all_vector(:,c,model_c) = FC_vector ;
         
         FC_opt_all_vector_tmp(:,model_c) = FC_vector;
         
@@ -73,11 +72,10 @@ parfor c = 1 :  4*nSubj
             img_diff_col(:,vox) = [0;tmp];
         end
         DVARS = rms(img_diff_col,2); DVARS(1) = DVARS(2);
-        %         FDDVARS(c,model_c) = corr(FD,DVARS);
-        FDDVARS_tmp(model_c) = corr(FD,DVARS);            
+        FDDVARS_tmp(model_c) = corr(FD,DVARS);
     end
     
-    
+    % ----------------------------------------------------
     % LPF after Regression
     
     ROI_data_clean = zeros(size(data));
@@ -111,19 +109,9 @@ parfor c = 1 :  4*nSubj
             img_diff_col(:,vox) = [0;tmp];
         end
         DVARS = rms(img_diff_col,2); DVARS(1) = DVARS(2);
-        FDDVARS_tmp(model_c) = corr(FD,DVARS);        
+        FDDVARS_tmp(model_c) = corr(FD,DVARS);
     end
-    
-    for p = 1:nPipel
-        FC_opt_all_vector(:,c,p) = FC_opt_all_vector_tmp(:,p);
-        
-        poolNS = FC_vector; poolNS(indCoupl)=[];
-        poolS = FC_vector(indCoupl);
-        [ttest_p,ttest_h,a] = ranksum(poolS,poolNS,'Tail','right');
-        FCC(c,p) = a.zval;        
-    end        
     FDDVARS(c,:) = FDDVARS_tmp;
-    
 end
 fprintf('Time elapsed (minutes): %3.1f  \n', toc/60)
 

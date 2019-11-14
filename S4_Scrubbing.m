@@ -7,19 +7,22 @@ save_path = ['Export/2019_11_11/Gordon_333/S4_Scrubbing/'];  if exist(save_path,
 task_list = {'Rest1_LR','Rest1_RL','Rest2_LR','Rest2_RL'};
 load('Export/subject_list_390_in_10.mat')
 
+flag_FD_1_DVARS_2 = 1;    %   Set it to 1 or 2 to consider FD or DVARS as a framewise index of quality to flag motion-contaminated volumes
 path_name = 'GS_WM_200_FD' ;    save_path_filename = [save_path,path_name,'.mat'];
 
 %% ====================================
 
-FD_thresh_list = [0.1:0.05:1.0,inf]   % FD 
-% FD_thresh_list = [0.5:0.5:20,inf]        % DVARS
+if  flag_FD_1_DVARS_2 == 1
+    FD_thresh_list = [0.1:0.05:1.0,inf]   % FD
+else
+    FD_thresh_list = [0.5:0.5:20,inf]        % DVARS
+end
+
 nPipel = length(FD_thresh_list);
 FC_opt_all_vector = zeros(nVect,nScans,nPipel);
-FDmean = zeros(nScans,1); 
+FDmean = zeros(nScans,1);
 FDDVARS = zeros(nScans,nPipel);
 nPipel = size(FC_opt_all_vector,3);
-FCC = zeros(nScans,nPipel);
-indCoupl = find(FC_prior_vector==1);
 
 tic
 parfor c = 1 : 4*nSubj
@@ -27,16 +30,18 @@ parfor c = 1 : 4*nSubj
     subject = char(subject_list(s,:));         task = char(task_list(run));
     fprintf('Subject: %s     (%d/%d);   Run: %d/%d    \n',subject,s,nSubj,run,4)
     
-    [data, GS, WMpca, ~, FD,movRegr, ~, ~,~,DVARS_WB] = load_scan(subject,task,0);
-
+    [data, GS, ~, WMpca, ~, ~,  FD,movRegr, ~, ~,~,DVARS_WB] = load_scan(subject,task,0);
     nComp = size(WMpca,2);              NV = length(GS);             FDmean(c) = mean(FD);
-        
+    
     for model_c = 1:nPipel   % par
-                ind =find(FD<FD_thresh_list(model_c));    % only FD
-%         ind_rm =   find(isoutlier(DVARS_WB,'median','ThresholdFactor', FD_thresh_list(model_c)));  ind=1:NV; ind(ind_rm) = [];    % only DVARS   
+        
+        if flag_FD_1_DVARS_2 == 1
+            ind =find(FD<FD_thresh_list(model_c));    % only FD
+        else
+            ind_rm =   find(isoutlier(DVARS_WB,'median','ThresholdFactor', FD_thresh_list(model_c)));  ind=1:NV; ind(ind_rm) = [];    % only DVARS
+        end
         
         regr = [ones(NV,1),GS, WMpca(:,1:200)];
-        
         regr = regr(ind,:);
         data_tmp = data(ind,:);
         ROI_data_clean = zeros(length(ind),NC);
@@ -63,16 +68,9 @@ parfor c = 1 : 4*nSubj
         end
         DVARS = rms(img_diff_col,2); DVARS(1) = DVARS(2);
         FDDVARS(c,model_c) = corr(FD(ind),DVARS);
-        
-        poolNS = FC_vector; poolNS(indCoupl)=[];
-        poolS = FC_vector(indCoupl);
-        [ttest_p,ttest_h,a] = ranksum(poolS,poolNS,'Tail','right');
-        FCC(c,model_c) = a.zval;
-        
     end
 end
 fprintf('Time elapsed (minutes): %3.1f  \n', toc/60)
-
 
 
 %%  Estimate and Save QC metrics      ------------

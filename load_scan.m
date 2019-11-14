@@ -1,5 +1,5 @@
 
-function [ROI_data, GMm, WMpca, CSFpca, FD,movRegr, RETR_RespRegr, RETR_CardRegr,GBF,DVARS,PCAexpl, GSstats] = load_scan(subject,task, flag_physio)
+function [ROI_data, GMm, WMm, WMpca, CSFm, CSFpca, FD,movRegr, RETR_RespRegr, RETR_CardRegr,GBF,DVARS,PCAexpl, GSstats] = load_scan(subject,task, flag_physio)
 
 
 baseDir='E:\CloudStation\HCP\RawData/';

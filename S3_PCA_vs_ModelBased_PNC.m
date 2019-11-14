@@ -8,8 +8,8 @@ save_path = ['Export/2019_11_11/Gordon_333/S3_PCA_vs_ModelBased_NCTs/'];  if exi
 task_list = {'Rest1_LR','Rest1_RL','Rest2_LR','Rest2_RL'};
 load('Export/subject_list_390_in_10.mat')
 
-path_name = 'PNC_models_64' ;         save_path_filename = [save_path,'PCA_',path_name,'.mat']; 
- 
+path_name = 'PNC_models_64' ;         save_path_filename = [save_path,'PCA_',path_name,'.mat'];
+
 %% ====================================
 
 
@@ -17,6 +17,7 @@ load('Struct_64.mat'),   nPipel = size(struct_64,1);
 FC_opt_all_vector = zeros(nVect,nScans,nPipel);
 FDmean = zeros(nScans,1);
 FDDVARS = zeros(nScans,nPipel);
+
 TR = 0.72;
 
 tic
@@ -25,12 +26,12 @@ parfor c = 1 : 4*nSubj
     subject = char(subject_list(s,:));         task = char(task_list(run));
     fprintf('Subject: %s     (%d/%d);   Run: %d/%d    \n',subject,s,nSubj,run,4)
     
-    [data, GS, WMpca, ~, FD,movRegr, RETR_RespRegr, RETR_CardRegr, SLFOs] = load_scan(subject,task,0);       
+    [data, GS,~, WMpca, ~, ~,  FD,movRegr, RETR_RespRegr, RETR_CardRegr, SLFOs] = load_scan(subject,task,0);
     nComp = size(WMpca,2);              NV = length(GS);             FDmean(c) = mean(FD);
-         
+    
     TBpca = WMpca(:,1:200);
-
-    for model_c = 1:nPipel        
+    
+    for model_c = 1:nPipel
         DM = struct_64(model_c,:);
         regr = [ones(NV,1)];
         if DM(1)==1,   regr = [regr, RETR_CardRegr]; end
@@ -44,7 +45,7 @@ parfor c = 1 : 4*nSubj
         for i = 1:NC
             voxel = data(:,i);                B=regr\voxel;   yPred=regr*B;
             ROI_data_clean(:,i)=voxel-yPred;
-        end        
+        end
         FC_tmp = corr(ROI_data_clean);
         
         FC_vector =zeros(nVect,1); k=0;
@@ -54,7 +55,7 @@ parfor c = 1 : 4*nSubj
                 FC_vector(k) =FC_tmp(i,j);
             end
         end
-        FC_opt_all_vector(:,c,model_c) = FC_vector ;        
+        FC_opt_all_vector(:,c,model_c) = FC_vector ;
         
         img_diff_col = zeros(size(ROI_data_clean));
         for vox = 1:NC
@@ -67,21 +68,6 @@ parfor c = 1 : 4*nSubj
     end
 end
 fprintf('Time elapsed (minutes): %3.1f  \n', toc/60), load chirp,  sound(y,Fs)
-
-nPipel = size(FC_opt_all_vector,3);
-FCC = zeros(nScans,nPipel);
-indCoupl = find(FC_prior_vector==1);
-parfor pip = 1:nPipel
-    fprintf('Pipelines: %d/%d     \n',pip, nPipel)
-    for c = 1 : nScans
-        FC_vector = squeeze(FC_opt_all_vector(:,c,pip));
-        poolNS = FC_vector; poolNS(indCoupl)=[];
-        poolS = FC_vector(indCoupl);
-        [ttest_p,ttest_h,a] = ranksum(poolS,poolNS,'Tail','right');
-        FCC(c,pip) = a.zval;
-    end
-end
-disp('End of loop !!! ')
 
 
 %%  Estimate and Save QC metrics      ------------
@@ -99,4 +85,3 @@ load chirp,  sound(y,Fs),
 
 
 
-    
