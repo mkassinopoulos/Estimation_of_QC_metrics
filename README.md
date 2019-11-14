@@ -9,7 +9,7 @@ Abstract: It is well established that confounding factors related to head motion
 
 ====================================================================
 
-The User guide will be available shortly. It will explain what each script is related to and how to reproduce some of the results presented in the study.
+The User guide will be available shortly and will explain what each script is related to and how to reproduce some of the results presented in the study.
 
 
 ## Author
